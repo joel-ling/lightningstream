@@ -1,0 +1,19 @@
+---
+instance: %s
+lmdbs:
+  main:
+    path: %s
+    options:
+      no_subdir: true
+    schema_tracks_changes: true
+storage:
+  type: s3
+  options:
+    access_key: %s
+    secret_key: %s
+    bucket: %s
+    endpoint_url: http://%s
+lmdb_poll_interval: 100ms
+storage_poll_interval: 100ms
+storage_retry_interval: 100ms
+storage_retry_count: 1

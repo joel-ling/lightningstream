@@ -1,0 +1,43 @@
+package testls
+
+import (
+	"context"
+	"os"
+
+	"github.com/cucumber/godog"
+)
+
+func AddStepSetUp(sc *godog.ScenarioContext) {
+	sc.Before(setUp)
+
+	return
+}
+
+func setUp(ctx0 context.Context, scenario *godog.Scenario) (
+	ctx context.Context, e error,
+) {
+	ctx = ctx0
+
+	var (
+		path string
+	)
+
+	path, e = os.MkdirTemp("", "")
+	if e != nil {
+		return
+	}
+
+	ctx = context.WithValue(ctx, ctxKeyTempDir{}, path)
+
+	ctx = context.WithValue(ctx, ctxKeyLSProcs{},
+		make([]*os.Process, 0, 2),
+	)
+
+	return
+}
+
+type (
+	ctxKeyTempDir struct{}
+
+	ctxKeyLSProcs struct{}
+)
