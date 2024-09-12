@@ -1,6 +1,7 @@
 package testauth
 
 import (
+	"bytes"
 	"context"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 
 func AddStepGetNativeRecord(sc *godog.ScenarioContext) {
 	sc.Then(`^I should get LS-native record "([^"]*)" "([^"]*)" `+
-		`in DB "([^"]*)" of env\. "([^"]*)"$`,
+		`in DB "([^"]*)" of "([^"]*)"$`,
 		getNativeRecord,
 	)
 
@@ -21,7 +22,7 @@ func AddStepGetNativeRecord(sc *godog.ScenarioContext) {
 }
 
 func getNativeRecord(
-	ctx0 context.Context, key, valExpect, dbName, envName string,
+	ctx0 context.Context, key, val, dbName, envName string,
 ) (
 	ctx context.Context, e error,
 ) {
@@ -30,6 +31,7 @@ func getNativeRecord(
 	var (
 		timeout   context.Context
 		valActual []byte
+		valExpect []byte = []byte(val)
 
 		get = func(txn *lmdb.Txn) (err error) {
 			var (
@@ -58,11 +60,15 @@ loop:
 	for {
 		select {
 		case <-timeout.Done():
-			return
+			break loop
 
 		default:
 			e = testlmdb.ViewLMDBEnv(ctx, envName, get)
-			if e == nil {
+			if e != nil {
+				continue
+			}
+
+			if bytes.Equal(valExpect, valActual[lsNativeHeaderLen:]) {
 				break loop
 			}
 		}
@@ -70,7 +76,7 @@ loop:
 
 	assert.Equal(
 		godog.T(ctx),
-		[]byte(valExpect),
+		valExpect,
 		valActual[lsNativeHeaderLen:],
 	)
 

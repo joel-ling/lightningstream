@@ -66,8 +66,10 @@ func newMinioServer(ctx0 context.Context) (ctx context.Context, e error) {
 
 type ctxKeySrvProc struct{}
 
-func newMinioClient() (*minio.Client, error) {
-	return minio.New(MinioServerAddr,
+var minioClient *minio.Client
+
+func init() {
+	minioClient, _ = minio.New(MinioServerAddr,
 		&minio.Options{
 			Creds: credentials.NewStaticV4(
 				MinioServerCred,
@@ -76,4 +78,6 @@ func newMinioClient() (*minio.Client, error) {
 			),
 		},
 	)
+
+	return
 }

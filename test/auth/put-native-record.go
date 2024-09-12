@@ -13,15 +13,16 @@ import (
 )
 
 func AddStepPutNativeRecord(sc *godog.ScenarioContext) {
-	sc.When(`^I put an LS-native record "([^"]*)" "([^"]*)" in DB "([^"]*)" `+
-		`of LMDB env\. "([^"]*)"$`,
+	sc.When(
+		`^in the transaction I put an LS-native record "([^"]*)" "([^"]*)" `+
+			`in DB "([^"]*)"$`,
 		putNativeRecord,
 	)
 
 	return
 }
 
-func putNativeRecord(ctx0 context.Context, key, val, dbName, envName string) (
+func putNativeRecord(ctx0 context.Context, key, val, dbName string) (
 	ctx context.Context, e error,
 ) {
 	ctx = ctx0
@@ -33,58 +34,49 @@ func putNativeRecord(ctx0 context.Context, key, val, dbName, envName string) (
 			),
 		)
 
-		put = func(txn *lmdb.Txn) (err error) {
-			var (
-				dbi lmdb.DBI
-			)
+		dbi lmdb.DBI
 
-			dbi, err = txn.OpenDBI(dbName, lmdb.Create)
-			if err != nil {
-				return
-			}
-
-			err = binary.Write(buf, binary.BigEndian,
-				uint64(time.Now().UnixNano()),
-			)
-			if err != nil {
-				return
-			}
-
-			err = binary.Write(buf, binary.BigEndian,
-				uint64(txn.ID()),
-			)
-			if err != nil {
-				return
-			}
-
-			err = binary.Write(buf, binary.BigEndian,
-				uint64(0),
-			)
-			if err != nil {
-				return
-			}
-
-			_, err = buf.Write(
-				[]byte(val),
-			)
-			if err != nil {
-				return
-			}
-
-			err = txn.Put(dbi,
-				[]byte(key),
-				buf.Bytes(),
-				0,
-			)
-			if err != nil {
-				return
-			}
-
-			return
-		}
+		txn *lmdb.Txn = testlmdb.GetLMDBTxn(ctx)
 	)
 
-	e = testlmdb.UpdateLMDBEnv(ctx, envName, put)
+	dbi, e = txn.OpenDBI(dbName, lmdb.Create)
+	if e != nil {
+		return
+	}
+
+	e = binary.Write(buf, binary.BigEndian,
+		uint64(time.Now().UnixNano()),
+	)
+	if e != nil {
+		return
+	}
+
+	e = binary.Write(buf, binary.BigEndian,
+		uint64(txn.ID()),
+	)
+	if e != nil {
+		return
+	}
+
+	e = binary.Write(buf, binary.BigEndian,
+		uint64(0),
+	)
+	if e != nil {
+		return
+	}
+
+	_, e = buf.Write(
+		[]byte(val),
+	)
+	if e != nil {
+		return
+	}
+
+	e = txn.Put(dbi,
+		[]byte(key),
+		buf.Bytes(),
+		0,
+	)
 	if e != nil {
 		return
 	}

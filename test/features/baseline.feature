@@ -1,12 +1,63 @@
 Feature: Lightning Stream, baseline
   Scenario: Get records put in source LMDB environment, from target environment
-    Given there is a new LMDB environment "source" with 2 DBs at most
-    And there is a new LMDB environment "target" with 2 DBs at most
+    Given there is a new LMDB environment "source.lmdb" with 2 DBs at most
+    And there is a new LMDB environment "target.lmdb" with 2 DBs at most
     And there is a new Minio server
-    And there is a bucket "bucket"
-    And there is an LS instance syncing LMDB env. "source" to bucket "bucket"
-    And there is an LS instance syncing LMDB env. "target" to bucket "bucket"
-    When I put an LS-native record "a" "A" in DB "upper" of LMDB env. "source"
-    And I put an LS-native record "B" "b" in DB "lower" of LMDB env. "source"
-    Then I should get LS-native record "a" "A" in DB "upper" of env. "target"
-    And I should get LS-native record "B" "b" in DB "lower" of env. "target"
+    And there is a new bucket "bucket"
+    And there is a new LS instance syncing "source.lmdb" to "bucket"
+    And there is a new LS instance syncing "target.lmdb" to "bucket"
+    When I begin a transaction in "source.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And in the transaction I put an LS-native record "B" "b" in DB "lower"
+    And I commit the transaction
+    Then I should get LS-native record "a" "A" in DB "upper" of "target.lmdb"
+    And I should get LS-native record "B" "b" in DB "lower" of "target.lmdb"
+
+  Scenario: Get records put in one LMDB environment from another, both ways
+    Given there is a new LMDB environment "active-0.lmdb" with 2 DBs at most
+    And there is a new LMDB environment "active-1.lmdb" with 2 DBs at most
+    And there is a new Minio server
+    And there is a new bucket "bucket"
+    And there is a new LS instance syncing "active-0.lmdb" to "bucket"
+    And there is a new LS instance syncing "active-1.lmdb" to "bucket"
+    When I begin a transaction in "active-0.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And I commit the transaction
+    And I begin a transaction in "active-1.lmdb"
+    And in the transaction I put an LS-native record "B" "b" in DB "lower"
+    And I commit the transaction
+    Then I should get LS-native record "a" "A" in DB "upper" of "active-1.lmdb"
+    And I should get LS-native record "B" "b" in DB "lower" of "active-0.lmdb"
+
+  Scenario: Simulate in-order object replication between S3 buckets
+    Given there is a new LMDB environment "source.lmdb" with 2 DBs at most
+    And there is a new LMDB environment "target.lmdb" with 2 DBs at most
+    And there is a new Minio server
+    And there is a new bucket "source.bucket"
+    And there is a new bucket "target.bucket"
+    And there is a new LS instance syncing "source.lmdb" to "source.bucket"
+    And there is a new LS instance syncing "target.lmdb" to "target.bucket"
+    When I begin a transaction in "source.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And in the transaction I put an LS-native record "B" "b" in DB "lower"
+    And I commit the transaction
+    Then I should count a total of 1 object in "source.bucket"
+    When I begin a transaction in "source.lmdb"
+    And in the transaction I put an LS-native record "a" "AA" in DB "upper"
+    And in the transaction I put an LS-native record "B" "bb" in DB "lower"
+    And I commit the transaction
+    Then I should count a total of 2 objects in "source.bucket"
+    When I begin a transaction in "source.lmdb"
+    And in the transaction I put an LS-native record "a" "AAA" in DB "upper"
+    And in the transaction I put an LS-native record "B" "bbb" in DB "lower"
+    And I commit the transaction
+    Then I should count a total of 3 objects in "source.bucket"
+    When I copy object i=0 from "source.bucket" to "target.bucket"
+    Then I should get LS-native record "a" "A" in DB "upper" of "target.lmdb"
+    And I should get LS-native record "B" "b" in DB "lower" of "target.lmdb"
+    When I copy object i=1 from "source.bucket" to "target.bucket"
+    Then I should get LS-native record "a" "AA" in DB "upper" of "target.lmdb"
+    And I should get LS-native record "B" "bb" in DB "lower" of "target.lmdb"
+    When I copy object i=2 from "source.bucket" to "target.bucket"
+    Then I should get LS-native record "a" "AAA" in DB "upper" of "target.lmdb"
+    And I should get LS-native record "B" "bbb" in DB "lower" of "target.lmdb"

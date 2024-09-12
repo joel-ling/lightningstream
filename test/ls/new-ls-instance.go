@@ -15,8 +15,7 @@ import (
 )
 
 func AddStepNewLSInstance(sc *godog.ScenarioContext) {
-	sc.Given(`^there is an LS instance syncing LMDB env\. "([^"]*)" `+
-		`to bucket "([^"]*)"$`,
+	sc.Given(`^there is a new LS instance syncing "([^"]*)" to "([^"]*)"$`,
 		newLSInstance,
 	)
 

@@ -16,11 +16,15 @@ func TestBaselineFeatures(t *testing.T) {
 		scenarioInitializer = func(sc *godog.ScenarioContext) {
 			testlmdb.AddStepSetUp(sc)
 			testlmdb.AddStepNewLMDBEnv(sc)
+			testlmdb.AddStepBeginTxn(sc)
+			testlmdb.AddStepCommitTxn(sc)
 			testlmdb.AddStepCleanUp(sc)
 
 			testminio.AddStepSetUp(sc)
 			testminio.AddStepNewMinioServer(sc)
-			testminio.AddStepCreateBucket(sc)
+			testminio.AddStepNewBucket(sc)
+			testminio.AddStepCountObjects(sc)
+			testminio.AddStepCopyIthObject(sc)
 			testminio.AddStepCleanUp(sc)
 
 			testls.AddStepSetUp(sc)
