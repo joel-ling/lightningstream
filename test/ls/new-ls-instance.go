@@ -38,16 +38,49 @@ func newLSInstance(ctx0 context.Context, envName, bucketName string) (
 			"../cmd/lightningstream",
 		)
 
-		cfgFile *os.File
-		cfgYaml string
+		cfgPath string
 		command *exec.Cmd
-		envPath string
 	)
 
 	e = builder.Run()
 	if e != nil {
 		return
 	}
+
+	cfgPath, e = configureLS(ctx, envName, bucketName)
+	if e != nil {
+		return
+	}
+
+	command = exec.Command(binPath, "sync",
+		"--config", cfgPath,
+	)
+
+	//command.Stderr = os.Stderr
+
+	e = command.Start()
+	if e != nil {
+		return
+	}
+
+	ctx = context.WithValue(ctx, ctxKeyLSProcs{},
+		append(
+			ctx.Value(ctxKeyLSProcs{}).([]*os.Process),
+			command.Process,
+		),
+	)
+
+	return
+}
+
+func configureLS(ctx context.Context, envName, bucketName string) (
+	cfgPath string, e error,
+) {
+	var (
+		cfgFile *os.File
+		cfgYaml string
+		envPath string
+	)
 
 	envPath, e = testlmdb.GetPathToLMDBEnv(ctx, envName)
 	if e != nil {
@@ -78,23 +111,7 @@ func newLSInstance(ctx0 context.Context, envName, bucketName string) (
 		return
 	}
 
-	command = exec.Command(binPath, "sync",
-		"--config", cfgFile.Name(),
-	)
-
-	//command.Stderr = os.Stderr
-
-	e = command.Start()
-	if e != nil {
-		return
-	}
-
-	ctx = context.WithValue(ctx, ctxKeyLSProcs{},
-		append(
-			ctx.Value(ctxKeyLSProcs{}).([]*os.Process),
-			command.Process,
-		),
-	)
+	cfgPath = cfgFile.Name()
 
 	return
 }
