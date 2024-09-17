@@ -94,3 +94,19 @@ Feature: Lightning Stream, baseline
     When I copy object i=1 from "source.bucket" to "target.bucket"
     Then I should get LS-native record "a" "AAA" in DB "upper" of "target.lmdb"
     And I should get LS-native record "B" "bbb" in DB "lower" of "target.lmdb"
+
+  Scenario: Get record put in one LMDB environment and LS-deleted in another
+    Given there is a new LMDB environment "writer.lmdb" with 1 DB at most
+    And there is a new LMDB environment "eraser.lmdb" with 1 DB at most
+    And there is a new Minio server
+    And there is a new bucket "bucket"
+    And there is a new LS instance syncing "writer.lmdb" to "bucket"
+    And there is a new LS instance syncing "eraser.lmdb" to "bucket"
+    When I begin a transaction in "writer.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And I commit the transaction
+    Then I should get LS-native record "a" "A" in DB "upper" of "eraser.lmdb"
+    When I begin a transaction in "eraser.lmdb"
+    And in the transaction I mark LS-native record "a" in DB "upper" as deleted
+    And I commit the transaction
+    Then I should get LS-native record "a" "" in DB "upper" of "writer.lmdb"

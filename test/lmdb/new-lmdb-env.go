@@ -9,8 +9,8 @@ import (
 )
 
 func AddStepNewLMDBEnv(sc *godog.ScenarioContext) {
-	sc.Given(
-		`^there is a new LMDB environment "([^"]*)" with (\d+) DBs at most$`,
+	sc.Given(`^there is a new LMDB environment "([^"]*)" with (\d+) DB(?:s)? `+
+		`at most$`,
 		newLMDBEnv,
 	)
 

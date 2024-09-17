@@ -33,6 +33,7 @@ func TestBaselineFeatures(t *testing.T) {
 
 			testauth.AddStepPutNativeRecord(sc)
 			testauth.AddStepGetNativeRecord(sc)
+			testauth.AddStepDelNativeRecord(sc)
 
 			return
 		}
