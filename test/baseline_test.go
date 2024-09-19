@@ -24,6 +24,8 @@ func TestBaselineFeatures(t *testing.T) {
 			testminio.AddStepNewMinioServer(sc)
 			testminio.AddStepNewBucket(sc)
 			testminio.AddStepCountObjects(sc)
+			testminio.AddStepCountObjectsNoteBucketSize(sc)
+			testminio.AddStepCompareBucketSizes(sc)
 			testminio.AddStepCopyIthObject(sc)
 			testminio.AddStepCleanUp(sc)
 

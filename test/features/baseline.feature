@@ -110,3 +110,18 @@ Feature: Lightning Stream, baseline
     And in the transaction I mark LS-native record "a" in DB "upper" as deleted
     And I commit the transaction
     Then I should get LS-native record "a" "" in DB "upper" of "writer.lmdb"
+
+  Scenario: Note bucket sizes and compare
+    Given there is a new LMDB environment "writer.lmdb" with 1 DB at most
+    And there is a new Minio server
+    And there is a new bucket "bucket"
+    And there is a new LS instance syncing "writer.lmdb" to "bucket"
+    When I begin a transaction in "writer.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And I commit the transaction
+    Then I should count a total of 1 object in "bucket" (bucket size "A")
+    When I begin a transaction in "writer.lmdb"
+    And in the transaction I put an LS-native record "a" "B" in DB "upper"
+    And I commit the transaction
+    Then I should count a total of 2 objects in "bucket" (bucket size "B")
+    And I should see that bucket size "B" is greater than "A"
