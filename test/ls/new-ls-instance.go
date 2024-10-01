@@ -19,6 +19,10 @@ func AddStepNewLSInstance(sc *godog.ScenarioContext) {
 		newLSInstance,
 	)
 
+	sc.When(`^I start a new LS instance syncing "([^"]*)" to "([^"]*)"$`,
+		newLSInstance,
+	)
+
 	return
 }
 

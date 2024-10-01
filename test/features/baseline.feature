@@ -29,6 +29,50 @@ Feature: Lightning Stream, baseline
     Then I should get LS-native record "a" "A" in DB "upper" of "active-1.lmdb"
     And I should get LS-native record "B" "b" in DB "lower" of "active-0.lmdb"
 
+  Scenario: Get records put in source LMDB env. while target LS was offline
+    Given there is a new LMDB environment "source.lmdb" with 2 DBs at most
+    And there is a new LMDB environment "target.lmdb" with 2 DBs at most
+    And there is a new Minio server
+    And there is a new bucket "bucket"
+    And there is a new LS instance syncing "source.lmdb" to "bucket"
+    When I begin a transaction in "source.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And in the transaction I put an LS-native record "B" "b" in DB "lower"
+    And I commit the transaction
+    And I start a new LS instance syncing "target.lmdb" to "bucket"
+    Then I should get LS-native record "a" "A" in DB "upper" of "target.lmdb"
+    And I should get LS-native record "B" "b" in DB "lower" of "target.lmdb"
+
+  Scenario: Get records put in source LMDB env. while source LS was offline
+    Given there is a new LMDB environment "source.lmdb" with 2 DBs at most
+    And there is a new LMDB environment "target.lmdb" with 2 DBs at most
+    And there is a new Minio server
+    And there is a new bucket "bucket"
+    And there is a new LS instance syncing "target.lmdb" to "bucket"
+    When I begin a transaction in "source.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And in the transaction I put an LS-native record "B" "b" in DB "lower"
+    And I commit the transaction
+    And I start a new LS instance syncing "source.lmdb" to "bucket"
+    Then I should get LS-native record "a" "A" in DB "upper" of "target.lmdb"
+    And I should get LS-native record "B" "b" in DB "lower" of "target.lmdb"
+
+  Scenario: Verify bidirectional sync of records put while all LSs were offline
+    Given there is a new LMDB environment "active-0.lmdb" with 2 DBs at most
+    And there is a new LMDB environment "active-1.lmdb" with 2 DBs at most
+    And there is a new Minio server
+    And there is a new bucket "bucket"
+    When I begin a transaction in "active-0.lmdb"
+    And in the transaction I put an LS-native record "a" "A" in DB "upper"
+    And I commit the transaction
+    And I begin a transaction in "active-1.lmdb"
+    And in the transaction I put an LS-native record "B" "b" in DB "lower"
+    And I commit the transaction
+    And I start a new LS instance syncing "active-0.lmdb" to "bucket"
+    And I start a new LS instance syncing "active-1.lmdb" to "bucket"
+    Then I should get LS-native record "a" "A" in DB "upper" of "active-1.lmdb"
+    And I should get LS-native record "B" "b" in DB "lower" of "active-0.lmdb"
+
   Scenario: Simulate in-order object replication between S3 buckets
     Given there is a new LMDB environment "source.lmdb" with 2 DBs at most
     And there is a new LMDB environment "target.lmdb" with 2 DBs at most
