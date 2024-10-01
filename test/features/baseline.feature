@@ -119,9 +119,9 @@ Feature: Lightning Stream, baseline
     When I begin a transaction in "writer.lmdb"
     And in the transaction I put an LS-native record "a" "A" in DB "upper"
     And I commit the transaction
-    Then I should count a total of 1 object in "bucket" (bucket size "A")
+    Then I should count a total of 1 object in "bucket" (total size "A" bytes)
     When I begin a transaction in "writer.lmdb"
     And in the transaction I put an LS-native record "a" "B" in DB "upper"
     And I commit the transaction
-    Then I should count a total of 2 objects in "bucket" (bucket size "B")
+    Then I should count a total of 2 objects in "bucket" (total size "B" bytes)
     And I should see that bucket size "B" is greater than "A"

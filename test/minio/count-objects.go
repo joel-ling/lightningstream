@@ -19,7 +19,7 @@ func AddStepCountObjects(sc *godog.ScenarioContext) {
 
 func AddStepCountObjectsNoteBucketSize(sc *godog.ScenarioContext) {
 	sc.Then(`^I should count a total of (\d+) object(?:s)? in "([^"]*)" `+
-		`\(bucket size "([^"]*)"\)$`,
+		`\(total size "([^"]*)" bytes\)$`,
 		countObjectsNoteBucketSize,
 	)
 
